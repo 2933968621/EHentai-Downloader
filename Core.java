@@ -14,7 +14,7 @@ public class Core {
     public static float numberOfPage = 40;
     public static List<DownloadInfo> downloadFailed = new ArrayList<>();
 
-    public static void downloadImageSet(String url, boolean retryFailed)
+    public static void downloadImageSet(String url, File path, boolean retryFailed, boolean overwrite)
     {
         if (url.contains("?p="))
             url = url.replace("?p=" + StringUtil.getSubString(url, "?p=", ""), "");
@@ -28,12 +28,14 @@ public class Core {
 
         if (websiteInfo.contains("Your IP address has been temporarily banned for excessive pageloads which indicates that you are using automated mirroring/harvesting software."))
         {
-            System.out.println("Your IP has ben banned, please try to change your IP");
+            System.out.println(UI.addConsoleMessage("Your IP has ben banned, please try to change your IP"));
             System.exit(1);
         }
+
         String title = StringUtil.getSubString(websiteInfo, "</div></div></div><div id=\"gd2\"><h1 id=\"gn\">", "</h1>");
         int imageCount = getMaxImageCount(websiteInfo);
         int progressID = -1;
+
         if (imageCount > numberOfPage)
         {
             int pageCount = Math.round(imageCount);
@@ -42,8 +44,8 @@ public class Core {
                 String pageInfo = getPageInfo(p, isExHentai(url));
                 if (pageInfo.contains("Your IP address has been temporarily banned for excessive pageloads which indicates that you are using automated mirroring/harvesting software."))
                 {
-                    System.out.println("Your IP has ben banned, please try to change your IP");
-                    System.exit(1);
+                    System.out.println(UI.addConsoleMessage("Your IP has ben banned, please try to change your IP"));
+                    return;
                 }
                 int pageMaxImageCount = getCurMaxImageCount(pageInfo);
                 int pageMinImageCount = getCurMinImageCount(pageInfo);
@@ -57,15 +59,23 @@ public class Core {
                         String imageID = StringUtil.getSubString(imageOrig, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"" + curID + "\"");
                         String imagePage = WebUtil.get("https://e-hentai.org/s/" + imageID);
                         String imageLink = StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
-                        download(title, curID, imageLink);
+                        download(title, curID, imageLink, path, retryFailed, overwrite);
                     }
                     else
                     {
                         String imagePage = WebUtil.get("https://e-hentai.org/s/" + StringUtil.getSubString(pageInfo, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"" + curID + "\""));
                         String imageLink = StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
-                        download(title, curID, imageLink);
+                        download(title, curID, imageLink, path, retryFailed, overwrite);
                     }
+
                     progressID = i;
+                    try {
+                        Thread.sleep(100);
+                    }
+                    catch (InterruptedException e)
+                    {
+                        e.printStackTrace();
+                    }
                 }
 
                 if (progressID >= imageCount)
@@ -82,47 +92,50 @@ public class Core {
                     String imageID = StringUtil.getSubString(imageOrig, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"" + i + "\"");
                     String imagePage = WebUtil.get("https://e-hentai.org/s/" + imageID);
                     String imageLink = StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
-                    download(title, String.valueOf(i), imageLink);
+                    download(title, String.valueOf(i), imageLink, path, retryFailed, overwrite);
                 }
                 else
                 {
                     String imagePage = WebUtil.get("https://e-hentai.org/s/" + StringUtil.getSubString(websiteInfo, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"1\""));
                     String imageLink = StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
-                    download(title, String.valueOf(i), imageLink);
+                    download(title, String.valueOf(i), imageLink, path, retryFailed, overwrite);
+                }
+
+                try {
+                    Thread.sleep(100);
+                }
+                catch (InterruptedException e)
+                {
+                    e.printStackTrace();
                 }
             }
         }
 
-        if (retryFailed)
-            checkFail(title);
+        if (!retryFailed)
+            checkFail(title, path, overwrite);
     }
 
-    public static void checkFail(String title)
+    public static void checkFail(String title, File path, boolean overwrite)
     {
         if (!downloadFailed.isEmpty())
         {
-            System.out.println("Some pictures failed to download, retying...");
-            downloadFailed.forEach(i -> download(title, i.getID(), i.getURL()));
-            System.out.println("Complete. If the download fails, please download by yourself.");
+            System.out.println(UI.addConsoleMessage("Some pictures failed to download, retying..."));
+            downloadFailed.forEach(i -> download(title, i.getID(), i.getURL(), path, false, overwrite));
+            System.out.println(UI.addConsoleMessage("Complete. If the download fails, please download by yourself."));
         }
     }
 
-    public static void download(String title, String id, String imageUrl) {
+    public static void download(String title, String id, String imageUrl, File path, boolean retry, boolean overwrite) {
         try {
-            URL url = new URL(imageUrl);
-
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-            connection.setRequestProperty("User-Agent", "Mozilla/5.0");
-            connection.setRequestProperty("Upgrade-Insecure-Requests", "1");
-
-            DataInputStream in = new DataInputStream(connection.getInputStream());
-
             Pattern pattern = Pattern.compile("[\\s\\\\/:\\*\\?\\\"<>\\|]");
             Matcher matcher = pattern.matcher(title);
             title = matcher.replaceAll(" ");
 
-            File savePath = new File("C:\\Backup\\" + title);
+            if (!path.exists())
+                if (!path.mkdir())
+                    return;
+
+            File savePath = new File(path, title);
             if (!savePath.exists())
                 if (!savePath.mkdir())
                     return;
@@ -130,21 +143,35 @@ public class Core {
             File saveFilePath = new File(savePath, id + ".png");
             if (saveFilePath.exists())
             {
-                if (saveFilePath.delete())
-                    System.out.println("ID: " + id + " has exists!, Deleted!");
+                if (overwrite)
+                {
+                    if (saveFilePath.delete())
+                        System.out.println(UI.addConsoleMessage("ID: " + id + " has exists!, Deleted!"));
+                    else
+                    {
+                        System.out.println(UI.addConsoleMessage("ID: " + id + " has exists!"));
+                        return;
+                    }
+                }
                 else
                 {
-                    System.out.println("ID: " + id + " has exists!");
+                    System.out.println(UI.addConsoleMessage("ID: " + id + " has exists!"));
                     return;
                 }
             }
+
+            HttpURLConnection connection = (HttpURLConnection) new URL(imageUrl).openConnection();
+
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.54 Safari/537.36 Edg/95.0.1020.30");
+
+            DataInputStream in = new DataInputStream(connection.getInputStream());
 
             DataOutputStream out = new DataOutputStream(Files.newOutputStream(saveFilePath.toPath()));
 
             byte[] buffer = new byte[4096];
             int count;
 
-            System.out.println("Downloading... ID: " + id + " Link: " + imageUrl);
+            System.out.println(UI.addConsoleMessage("Downloading... ID: " + id + " Link: " + imageUrl));
 
             while ((count = in.read(buffer)) > 0) {
                 out.write(buffer, 0, count);
@@ -154,11 +181,13 @@ public class Core {
             in.close();
             connection.disconnect();
 
-            System.out.println("ID: " + id + " Download complete.");
+            System.out.println(UI.addConsoleMessage("ID: " + id + " Download complete."));
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("ID: " + id + " Link: " + imageUrl + " Failed!");
-            downloadFailed.add(new DownloadInfo(imageUrl, id));
+            System.out.println(UI.addConsoleMessage("ID: " + id + " Link: " + imageUrl + " Failed!" + (retry ? ", retry now!" : "")));
+            if (!retry)
+                downloadFailed.add(new DownloadInfo(imageUrl, id));
+            else download(title, id, imageUrl, path, false, overwrite);
         }
     }
 
