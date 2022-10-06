@@ -1,13 +1,6 @@
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Core {
     public static String[] galleryID = null;
@@ -21,10 +14,16 @@ public class Core {
 
         galleryID = getGalleryID(url);
 
-        String websiteInfo = getPageInfo(0, isExHentai(url));
+        boolean isExHentai = isExHentai(url);
+
+        String websiteInfo = getPageInfo(0, isExHentai);
 
         if (websiteInfo.isEmpty())
+        {
+            if (isExHentai)
+                System.out.println(UI.addConsoleMessage("Unable to access ExHentai, possibly because you do not have permission or cookies"));
             return;
+        }
 
         if (websiteInfo.contains("Your IP address has been temporarily banned for excessive pageloads which indicates that you are using automated mirroring/harvesting software."))
         {
@@ -63,15 +62,17 @@ public class Core {
                         String origID = String.format("%0" + (int) (Math.log10(imageCount) + 1) + "d", i - 1);
                         String imageOrig = StringUtil.getSubString(pageInfo, "\"><img alt=\"" + origID + "\"", "\"><img alt=\"" + curID + "\"");
                         String imageID = StringUtil.getSubString(imageOrig, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"" + curID + "\"");
-                        String imagePage = WebUtil.get("https://e-hentai.org/s/" + imageID);
+                        String imagePage = WebUtil.get("https://e-hentai.org/s/" + imageID, isExHentai);
                         String imageLink = StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
-                        download(title, curID, imageLink, path, retryFailed, overwrite);
+                        if (!WebUtil.download(title, curID, imageLink, path, retryFailed, overwrite, isExHentai))
+                            System.err.println("ID: " + i + " No download!");
                     }
                     else
                     {
-                        String imagePage = WebUtil.get("https://e-hentai.org/s/" + StringUtil.getSubString(pageInfo, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"" + curID + "\""));
+                        String imagePage = WebUtil.get("https://e-hentai.org/s/" + StringUtil.getSubString(pageInfo, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"" + curID + "\""), isExHentai);
                         String imageLink = StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
-                        download(title, curID, imageLink, path, retryFailed, overwrite);
+                        if (!WebUtil.download(title, curID, imageLink, path, retryFailed, overwrite, isExHentai))
+                            System.err.println("ID: " + i + " No download!");
                     }
 
                     progressID = i;
@@ -92,19 +93,23 @@ public class Core {
         {
             for (int i = 1; i <= imageCount; i++)
             {
+                String curID = String.format("%0" + (int) (Math.log10(imageCount) + 1) + "d", i);
                 if (i > 1)
                 {
-                    String imageOrig = StringUtil.getSubString(websiteInfo, "\"><img alt=\"" + (i - 1) + "\"", "\"><img alt=\"" + i + "\"");
-                    String imageID = StringUtil.getSubString(imageOrig, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"" + i + "\"");
-                    String imagePage = WebUtil.get("https://e-hentai.org/s/" + imageID);
+                    String origID = String.format("%0" + (int) (Math.log10(imageCount) + 1) + "d", i - 1);
+                    String imageOrig = StringUtil.getSubString(websiteInfo, "\"><img alt=\"" + origID + "\"", "\"><img alt=\"" + curID + "\"");
+                    String imageID = StringUtil.getSubString(imageOrig, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"" + curID + "\"");
+                    String imagePage = WebUtil.get("https://e-hentai.org/s/" + imageID, isExHentai);
                     String imageLink = StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
-                    download(title, String.valueOf(i), imageLink, path, retryFailed, overwrite);
+                    if (!WebUtil.download(title, String.valueOf(i), imageLink, path, retryFailed, overwrite, isExHentai))
+                        System.err.println("ID: " + i + " No download!");
                 }
                 else
                 {
-                    String imagePage = WebUtil.get("https://e-hentai.org/s/" + StringUtil.getSubString(websiteInfo, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"1\""));
+                    String imagePage = WebUtil.get("https://e-hentai.org/s/" + StringUtil.getSubString(websiteInfo, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"" + curID + "\""), isExHentai);
                     String imageLink = StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
-                    download(title, String.valueOf(i), imageLink, path, retryFailed, overwrite);
+                    if (!WebUtil.download(title, String.valueOf(i), imageLink, path, retryFailed, overwrite, isExHentai))
+                        System.err.println("ID: " + i + " No download!");
                 }
 
                 try {
@@ -118,82 +123,16 @@ public class Core {
         }
 
         if (!retryFailed)
-            checkFail(title, path, overwrite);
+            checkFail(title, path, overwrite, isExHentai);
     }
 
-    public static void checkFail(String title, File path, boolean overwrite)
+    public static void checkFail(String title, File path, boolean overwrite, boolean isExHentai)
     {
         if (!downloadFailed.isEmpty())
         {
             System.out.println(UI.addConsoleMessage("Some pictures failed to download, retying..."));
-            downloadFailed.forEach(i -> download(title, i.getID(), i.getURL(), path, false, overwrite));
+            downloadFailed.forEach(i -> WebUtil.download(title, i.getID(), i.getURL(), path, false, overwrite, isExHentai));
             System.out.println(UI.addConsoleMessage("Complete. If the download fails, please download by yourself."));
-        }
-    }
-
-    public static void download(String title, String id, String imageUrl, File path, boolean retry, boolean overwrite) {
-        try {
-            Pattern pattern = Pattern.compile("[\\s\\\\/:\\*\\?\\\"<>\\|]");
-            Matcher matcher = pattern.matcher(title);
-            title = matcher.replaceAll(" ");
-
-            if (!path.exists())
-                if (!path.mkdir())
-                    return;
-
-            File savePath = new File(path, title);
-            if (!savePath.exists())
-                if (!savePath.mkdir())
-                    return;
-
-            File saveFilePath = new File(savePath, id + ".png");
-            if (saveFilePath.exists())
-            {
-                if (overwrite)
-                {
-                    if (saveFilePath.delete())
-                        System.out.println(UI.addConsoleMessage("ID: " + id + " has exists!, Deleted!"));
-                    else
-                    {
-                        System.out.println(UI.addConsoleMessage("ID: " + id + " has exists!"));
-                        return;
-                    }
-                }
-                else
-                {
-                    System.out.println(UI.addConsoleMessage("ID: " + id + " has exists!"));
-                    return;
-                }
-            }
-
-            HttpURLConnection connection = (HttpURLConnection) new URL(imageUrl).openConnection();
-
-            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.54 Safari/537.36 Edg/95.0.1020.30");
-
-            DataInputStream in = new DataInputStream(connection.getInputStream());
-
-            DataOutputStream out = new DataOutputStream(Files.newOutputStream(saveFilePath.toPath()));
-
-            byte[] buffer = new byte[4096];
-            int count;
-
-            System.out.println(UI.addConsoleMessage("Downloading... ID: " + id + " Link: " + imageUrl));
-
-            while ((count = in.read(buffer)) > 0) {
-                out.write(buffer, 0, count);
-            }
-
-            out.close();
-            in.close();
-            connection.disconnect();
-
-            System.out.println(UI.addConsoleMessage("ID: " + id + " Download complete."));
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println(UI.addConsoleMessage("ID: " + id + " Link: " + imageUrl + " Failed!" + (retry ? ", retry now!" : "")));
-            if (!retry)
-                downloadFailed.add(new DownloadInfo(imageUrl, id));
-            else download(title, id, imageUrl, path, false, overwrite);
         }
     }
 
@@ -224,7 +163,7 @@ public class Core {
 
         String ehentai = "https://e-hentai.org/g/";
         String exhentai = "https://exhentai.org/g/";
-        return WebUtil.get((isExHentai ? exhentai :ehentai) + galleryID[0] + "/" + galleryID[1] + "/?p=" + id);
+        return WebUtil.get((isExHentai ? exhentai : ehentai) + galleryID[0] + "/" + galleryID[1] + "/?p=" + id, isExHentai);
     }
 
     public static String[] getGalleryID(String url)

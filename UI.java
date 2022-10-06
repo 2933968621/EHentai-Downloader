@@ -59,8 +59,8 @@ public class UI implements ActionListener, ComponentListener {
         stop_button.addActionListener(this);
         stop_button.setBounds(3, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + 15, frame.getWidth() - 28, 25);
 
-        retry_text.setBounds(3, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + stop_button.getHeight() + 10, 150, 25);
-        overwrite_text.setBounds(150, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + stop_button.getHeight() + 10, 300, 25);
+        retry_text.setBounds(3, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + stop_button.getHeight() + 20, 150, 25);
+        overwrite_text.setBounds(150, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + stop_button.getHeight() + 20, 300, 25);
 
         panel.add(scrollPane);
         panel.add(url_text);
@@ -81,22 +81,23 @@ public class UI implements ActionListener, ComponentListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == download_button)
+        if (e.getSource() == download_button && !url_text.getText().isEmpty())
         {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            fileChooser.showOpenDialog(null);
+            if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
+            {
+                this.curThread = new Thread(() -> {
+                    download_button.setEnabled(false);
+                    stop_button.setEnabled(true);
+                    Core.downloadImageSet(url_text.getText(), fileChooser.getSelectedFile(), retry_text.isSelected(), overwrite_text.isSelected());
+                    download_button.setEnabled(true);
+                    stop_button.setEnabled(false);
+                    this.curThread = null;
+                });
 
-            this.curThread = new Thread(() -> {
-                download_button.setEnabled(false);
-                stop_button.setEnabled(true);
-                Core.downloadImageSet(url_text.getText(), fileChooser.getSelectedFile(), retry_text.isSelected(), overwrite_text.isSelected());
-                download_button.setEnabled(true);
-                stop_button.setEnabled(false);
-                this.curThread = null;
-            });
-
-            this.curThread.start();
+                this.curThread.start();
+            }
         }
 
         if (e.getSource() == stop_button && this.curThread != null)
