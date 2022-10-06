@@ -14,9 +14,11 @@ public class UI implements ActionListener, ComponentListener {
 
     private final JTextField url_text = new JTextField(0);
 
-    private final JCheckBox retry_text = new JCheckBox("Retry failed", true);
+    private final JCheckBox retry_checkbox = new JCheckBox("Retry failed", true);
 
-    private final JCheckBox overwrite_text = new JCheckBox("Overwrite existing", false);
+    private final JCheckBox overwrite_checkbox = new JCheckBox("Overwrite existing", false);
+
+    private final JCheckBox original_checkbox = new JCheckBox("Overwrite existing", false);
 
     private final JButton download_button = new JButton("Download");
 
@@ -62,15 +64,17 @@ public class UI implements ActionListener, ComponentListener {
         stop_button.addActionListener(this);
         stop_button.setBounds(3, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + 15, frame.getWidth() - 28, 25);
 
-        retry_text.setBounds(3, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + stop_button.getHeight() + 20, 150, 25);
-        overwrite_text.setBounds(150, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + stop_button.getHeight() + 20, 300, 25);
+        retry_checkbox.setBounds(3, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + stop_button.getHeight() + 20, 150, 25);
+        overwrite_checkbox.setBounds(150, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + stop_button.getHeight() + 20, 300, 25);
+        original_checkbox.setBounds(300, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + stop_button.getHeight() + 20, 450, 25);
 
         panel.add(scrollPane);
         panel.add(url_text);
         panel.add(download_button);
         panel.add(stop_button);
-        panel.add(retry_text);
-        panel.add(overwrite_text);
+        panel.add(retry_checkbox);
+        panel.add(overwrite_checkbox);
+        panel.add(original_checkbox);
         panel.add(url_label);
         panel.setLayout(null);
 
@@ -96,7 +100,7 @@ public class UI implements ActionListener, ComponentListener {
                 this.curThread = new Thread(() -> {
                     download_button.setEnabled(false);
                     stop_button.setEnabled(true);
-                    Core.downloadImageSet(url_text.getText(), backupSavePath = fileChooser.getSelectedFile(), retry_text.isSelected(), overwrite_text.isSelected());
+                    Core.downloadImageSet(url_text.getText(), backupSavePath = fileChooser.getSelectedFile(), retry_checkbox.isSelected(), overwrite_checkbox.isSelected(), original_checkbox.isSelected());
                     download_button.setEnabled(true);
                     stop_button.setEnabled(false);
                     this.curThread = null;

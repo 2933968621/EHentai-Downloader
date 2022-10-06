@@ -7,8 +7,27 @@ public class Core {
     public static float numberOfPage = 40;
     public static List<DownloadInfo> downloadFailed = new ArrayList<>();
 
-    public static void downloadImageSet(String url, File path, boolean retryFailed, boolean overwrite)
+    public static void downloadImageSet(String url, File path, boolean retryFailed, boolean overwrite, boolean original)
     {
+        if (original)
+        {
+            String home = WebUtil.get("https://e-hentai.org/home.php", false);
+            if (home.contains("This page requires you to log on."))
+            {
+                System.err.println(UI.addConsoleMessage("No cookie entered or cookie error, unable to download the original image."));
+                return;
+            }
+
+            long current = Long.parseLong(StringUtil.getSubString(home, "You are currently at <strong>", "</strong> towards a limit of <strong>").trim());
+            long max = Long.parseLong(StringUtil.getSubString(home, "</strong> towards a limit of <strong>", "</strong>.</p>").trim());
+
+            if (current >= max)
+            {
+                System.err.println(UI.addConsoleMessage("The number of downloads exceeds the limit!"));
+                return;
+            }
+        }
+
         if (url.contains("?p="))
             url = url.replace("?p=" + StringUtil.getSubString(url, "?p=", ""), "");
 
@@ -63,14 +82,14 @@ public class Core {
                         String imageOrig = StringUtil.getSubString(pageInfo, "\"><img alt=\"" + origID + "\"", "\"><img alt=\"" + curID + "\"");
                         String imageID = StringUtil.getSubString(imageOrig, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"" + curID + "\"");
                         String imagePage = WebUtil.get("https://e-hentai.org/s/" + imageID, isExHentai);
-                        String imageLink = StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
+                        String imageLink = (original && imagePage.contains("Download original")) ? ("https://e-hentai.org/fullimg.php?" + StringUtil.getSubString(imagePage, "a href=\"https://e-hentai.org/fullimg.php?", "\">Download original ").replaceAll("amp;", "")) : StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
                         if (!WebUtil.download(title, curID, imageLink, path, retryFailed, overwrite, isExHentai))
                             System.err.println("ID: " + i + " No download!");
                     }
                     else
                     {
                         String imagePage = WebUtil.get("https://e-hentai.org/s/" + StringUtil.getSubString(pageInfo, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"" + curID + "\""), isExHentai);
-                        String imageLink = StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
+                        String imageLink = (original && imagePage.contains("Download original")) ? ("https://e-hentai.org/fullimg.php?" + StringUtil.getSubString(imagePage, "a href=\"https://e-hentai.org/fullimg.php?", "\">Download original ").replaceAll("amp;", "")) : StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
                         if (!WebUtil.download(title, curID, imageLink, path, retryFailed, overwrite, isExHentai))
                             System.err.println("ID: " + i + " No download!");
                     }
@@ -100,14 +119,14 @@ public class Core {
                     String imageOrig = StringUtil.getSubString(websiteInfo, "\"><img alt=\"" + origID + "\"", "\"><img alt=\"" + curID + "\"");
                     String imageID = StringUtil.getSubString(imageOrig, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"" + curID + "\"");
                     String imagePage = WebUtil.get("https://e-hentai.org/s/" + imageID, isExHentai);
-                    String imageLink = StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
+                    String imageLink = (original && imagePage.contains("Download original")) ? ("https://e-hentai.org/fullimg.php?" + StringUtil.getSubString(imagePage, "a href=\"https://e-hentai.org/fullimg.php?", "\">Download original ").replaceAll("amp;", "")) : StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
                     if (!WebUtil.download(title, String.valueOf(i), imageLink, path, retryFailed, overwrite, isExHentai))
                         System.err.println("ID: " + i + " No download!");
                 }
                 else
                 {
                     String imagePage = WebUtil.get("https://e-hentai.org/s/" + StringUtil.getSubString(websiteInfo, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"" + curID + "\""), isExHentai);
-                    String imageLink = StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
+                    String imageLink = (original && imagePage.contains("Download original")) ? ("https://e-hentai.org/fullimg.php?" + StringUtil.getSubString(imagePage, "a href=\"https://e-hentai.org/fullimg.php?", "\">Download original ").replaceAll("amp;", "")) : StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
                     if (!WebUtil.download(title, String.valueOf(i), imageLink, path, retryFailed, overwrite, isExHentai))
                         System.err.println("ID: " + i + " No download!");
                 }
