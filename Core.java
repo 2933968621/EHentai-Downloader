@@ -31,10 +31,10 @@ public class Core {
             System.out.println(UI.addConsoleMessage("Your IP has ben banned, please try to change your IP"));
             return;
         }
-        
+
         if (websiteInfo.contains("This gallery has been flagged as <strong>Offensive For Everyone</strong>."))
         {
-            downloadImageSet(url + "/?nw=session", path, retryFailed, overwrite);
+            System.err.println(UI.addConsoleMessage("Error."));
             return;
         }
 
