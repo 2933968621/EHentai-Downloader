@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 
 public class UI implements ActionListener, ComponentListener {
     private final JFrame frame = new JFrame();
@@ -24,6 +25,8 @@ public class UI implements ActionListener, ComponentListener {
     private final JLabel url_label = new JLabel("URL:");
 
     private Thread curThread = null;
+
+    private File backupSavePath = null;
 
     public void initComponent()
     {
@@ -85,12 +88,15 @@ public class UI implements ActionListener, ComponentListener {
         {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            if (backupSavePath != null)
+                fileChooser.setCurrentDirectory(backupSavePath);
+
             if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
             {
                 this.curThread = new Thread(() -> {
                     download_button.setEnabled(false);
                     stop_button.setEnabled(true);
-                    Core.downloadImageSet(url_text.getText(), fileChooser.getSelectedFile(), retry_text.isSelected(), overwrite_text.isSelected());
+                    Core.downloadImageSet(url_text.getText(), backupSavePath = fileChooser.getSelectedFile(), retry_text.isSelected(), overwrite_text.isSelected());
                     download_button.setEnabled(true);
                     stop_button.setEnabled(false);
                     this.curThread = null;
