@@ -19,7 +19,11 @@ public class UI implements ActionListener, ComponentListener {
 
     private final JButton download_button = new JButton("Download");
 
+    private final JButton stop_button = new JButton("Stop");
+
     private final JLabel url_label = new JLabel("URL:");
+
+    private Thread curThread = null;
 
     public void initComponent()
     {
@@ -39,7 +43,6 @@ public class UI implements ActionListener, ComponentListener {
 
         scrollPane.setBounds(0, 0, frame.getWidth() - 22, frame.getHeight() - 200);
         scrollPane.getViewport().add(message_text);
-        scrollPane.setAutoscrolls(true);
 
         url_text.setBounds(50, message_text.getHeight() + 5, frame.getWidth() - 75, 25);
         url_text.setFont(new Font("Serif", Font.PLAIN, 16));
@@ -51,12 +54,18 @@ public class UI implements ActionListener, ComponentListener {
         download_button.registerKeyboardAction(this, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false), JComponent.WHEN_IN_FOCUSED_WINDOW);
         download_button.setBounds(3, message_text.getHeight() + url_text.getHeight() + 10, frame.getWidth() - 28, 25);
 
-        retry_text.setBounds(3, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + 10, 150, 25);
-        overwrite_text.setBounds(150, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + 10, 300, 25);
+        stop_button.setVisible(true);
+        stop_button.setEnabled(!download_button.isEnabled());
+        stop_button.addActionListener(this);
+        stop_button.setBounds(3, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + 15, frame.getWidth() - 28, 25);
+
+        retry_text.setBounds(3, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + stop_button.getHeight() + 10, 150, 25);
+        overwrite_text.setBounds(150, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + stop_button.getHeight() + 10, 300, 25);
 
         panel.add(scrollPane);
         panel.add(url_text);
         panel.add(download_button);
+        panel.add(stop_button);
         panel.add(retry_text);
         panel.add(overwrite_text);
         panel.add(url_label);
@@ -78,11 +87,24 @@ public class UI implements ActionListener, ComponentListener {
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             fileChooser.showOpenDialog(null);
 
-            new Thread(() -> {
+            this.curThread = new Thread(() -> {
                 download_button.setEnabled(false);
+                stop_button.setEnabled(true);
                 Core.downloadImageSet(url_text.getText(), fileChooser.getSelectedFile(), retry_text.isSelected(), overwrite_text.isSelected());
                 download_button.setEnabled(true);
-            }).start();
+                stop_button.setEnabled(false);
+                this.curThread = null;
+            });
+
+            this.curThread.start();
+        }
+
+        if (e.getSource() == stop_button && this.curThread != null)
+        {
+            this.curThread.stop();
+            this.curThread = null;
+            download_button.setEnabled(true);
+            stop_button.setEnabled(false);
         }
     }
 
