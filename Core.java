@@ -29,7 +29,13 @@ public class Core {
         if (websiteInfo.contains("Your IP address has been temporarily banned for excessive pageloads which indicates that you are using automated mirroring/harvesting software."))
         {
             System.out.println(UI.addConsoleMessage("Your IP has ben banned, please try to change your IP"));
-            System.exit(1);
+            return;
+        }
+        
+        if (websiteInfo.contains("This gallery has been flagged as <strong>Offensive For Everyone</strong>."))
+        {
+            downloadImageSet(url + "/?nw=session", path, retryFailed, overwrite);
+            return;
         }
 
         String title = StringUtil.getSubString(websiteInfo, "</div></div></div><div id=\"gd2\"><h1 id=\"gn\">", "</h1>");
