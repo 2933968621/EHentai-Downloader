@@ -60,6 +60,9 @@ public class Core {
         int imageCount = getMaxImageCount(websiteInfo);
         int progressID = -1;
 
+        String hentaiPage = isExHentai ? "https://exhentai.org/s/" : "https://e-hentai.org/s/";
+        String hentaiFImg = isExHentai ? "https://exhentai.org/fullimg.php?" : "https://e-hentai.org/fullimg.php?";
+
         if (imageCount > numberOfPage)
         {
             int pageCount = Math.round(imageCount);
@@ -80,16 +83,16 @@ public class Core {
                     {
                         String origID = String.format("%0" + (int) (Math.log10(imageCount) + 1) + "d", i - 1);
                         String imageOrig = StringUtil.getSubString(pageInfo, "\"><img alt=\"" + origID + "\"", "\"><img alt=\"" + curID + "\"");
-                        String imageID = StringUtil.getSubString(imageOrig, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"" + curID + "\"");
-                        String imagePage = WebUtil.get("https://e-hentai.org/s/" + imageID, isExHentai);
-                        String imageLink = (original && imagePage.contains("Download original")) ? ("https://e-hentai.org/fullimg.php?" + StringUtil.getSubString(imagePage, "a href=\"https://e-hentai.org/fullimg.php?", "\">Download original ").replaceAll("amp;", "")) : StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
+                        String imageID = StringUtil.getSubString(imageOrig, "<a href=\"" + hentaiPage, "\"><img alt=\"" + curID + "\"");
+                        String imagePage = WebUtil.get(hentaiPage + imageID, isExHentai);
+                        String imageLink = (original && imagePage.contains("Download original")) ? (hentaiFImg + StringUtil.getSubString(imagePage, "a href=\"" + hentaiFImg, "\">Download original ").replaceAll("amp;", "")) : StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
                         if (!WebUtil.download(title, curID, imageLink, path, retryFailed, overwrite, isExHentai))
                             System.err.println("ID: " + i + " No download!");
                     }
                     else
                     {
-                        String imagePage = WebUtil.get("https://e-hentai.org/s/" + StringUtil.getSubString(pageInfo, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"" + curID + "\""), isExHentai);
-                        String imageLink = (original && imagePage.contains("Download original")) ? ("https://e-hentai.org/fullimg.php?" + StringUtil.getSubString(imagePage, "a href=\"https://e-hentai.org/fullimg.php?", "\">Download original ").replaceAll("amp;", "")) : StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
+                        String imagePage = WebUtil.get(hentaiPage + StringUtil.getSubString(pageInfo, "<a href=\"" + hentaiPage, "\"><img alt=\"" + curID + "\""), isExHentai);
+                        String imageLink = (original && imagePage.contains("Download original")) ? (hentaiFImg + StringUtil.getSubString(imagePage, "a href=\"" + hentaiFImg, "\">Download original ").replaceAll("amp;", "")) : StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
                         if (!WebUtil.download(title, curID, imageLink, path, retryFailed, overwrite, isExHentai))
                             System.err.println("ID: " + i + " No download!");
                     }
@@ -117,16 +120,16 @@ public class Core {
                 {
                     String origID = String.format("%0" + (int) (Math.log10(imageCount) + 1) + "d", i - 1);
                     String imageOrig = StringUtil.getSubString(websiteInfo, "\"><img alt=\"" + origID + "\"", "\"><img alt=\"" + curID + "\"");
-                    String imageID = StringUtil.getSubString(imageOrig, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"" + curID + "\"");
-                    String imagePage = WebUtil.get("https://e-hentai.org/s/" + imageID, isExHentai);
-                    String imageLink = (original && imagePage.contains("Download original")) ? ("https://e-hentai.org/fullimg.php?" + StringUtil.getSubString(imagePage, "a href=\"https://e-hentai.org/fullimg.php?", "\">Download original ").replaceAll("amp;", "")) : StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
+                    String imageID = StringUtil.getSubString(imageOrig, "<a href=\"" + hentaiPage, "\"><img alt=\"" + curID + "\"");
+                    String imagePage = WebUtil.get(hentaiPage + imageID, isExHentai);
+                    String imageLink = (original && imagePage.contains("Download original")) ? (hentaiFImg + StringUtil.getSubString(imagePage, "a href=\"" + hentaiFImg, "\">Download original ").replaceAll("amp;", "")) : StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
                     if (!WebUtil.download(title, String.valueOf(i), imageLink, path, retryFailed, overwrite, isExHentai))
                         System.err.println("ID: " + i + " No download!");
                 }
                 else
                 {
-                    String imagePage = WebUtil.get("https://e-hentai.org/s/" + StringUtil.getSubString(websiteInfo, "<a href=\"https://e-hentai.org/s/", "\"><img alt=\"" + curID + "\""), isExHentai);
-                    String imageLink = (original && imagePage.contains("Download original")) ? ("https://e-hentai.org/fullimg.php?" + StringUtil.getSubString(imagePage, "a href=\"https://e-hentai.org/fullimg.php?", "\">Download original ").replaceAll("amp;", "")) : StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
+                    String imagePage = WebUtil.get(hentaiPage + StringUtil.getSubString(websiteInfo, "<a href=\"" + hentaiPage, "\"><img alt=\"" + curID + "\""), isExHentai);
+                    String imageLink = (original && imagePage.contains("Download original")) ? (hentaiFImg + StringUtil.getSubString(imagePage, "a href=\"" + hentaiFImg, "\">Download original ").replaceAll("amp;", "")) : StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
                     if (!WebUtil.download(title, String.valueOf(i), imageLink, path, retryFailed, overwrite, isExHentai))
                         System.err.println("ID: " + i + " No download!");
                 }
