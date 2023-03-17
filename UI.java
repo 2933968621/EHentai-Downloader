@@ -18,7 +18,7 @@ public class UI implements ActionListener, ComponentListener {
 
     private final JCheckBox overwrite_checkbox = new JCheckBox("Overwrite existing", false);
 
-    private final JCheckBox original_checkbox = new JCheckBox("Overwrite existing", false);
+    private final JCheckBox original_checkbox = new JCheckBox("Original", false);
 
     private final JButton download_button = new JButton("Download");
 
