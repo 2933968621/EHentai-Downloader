@@ -57,7 +57,7 @@ public class WebUtil {
         return "";
     }
 
-    public static boolean download(String title, String id, String imageUrl, File path, boolean retry, boolean overwrite, boolean isExHentai) {
+    public static boolean download(String title, String id, String imageUrl, File path, boolean retry, boolean isExHentai) {
         try {
             if (WebUtil.get(imageUrl, isExHentai).toLowerCase().contains("downloading original files of older galleries during peak hours requires gp, and you do not have enough."))
             {
@@ -80,23 +80,10 @@ public class WebUtil {
                     return false;
 
             File saveFilePath = new File(savePath, id + ".png");
-            if (saveFilePath.exists())
+            if (saveFilePath.exists() && !saveFilePath.delete())
             {
-                if (overwrite)
-                {
-                    if (saveFilePath.delete())
-                        System.out.println(UI.addConsoleMessage("ID: " + id + " has exists!, Deleted!"));
-                    else
-                    {
-                        System.out.println(UI.addConsoleMessage("ID: " + id + " has exists!"));
-                        return false;
-                    }
-                }
-                else
-                {
-                    System.out.println(UI.addConsoleMessage("ID: " + id + " has exists!"));
-                    return false;
-                }
+                System.out.println(UI.addConsoleMessage("ID: " + id + " has exists and it is occupied!"));
+                return false;
             }
 
             HttpURLConnection connection = (HttpURLConnection) new URI(imageUrl).toURL().openConnection();
@@ -146,7 +133,7 @@ public class WebUtil {
                 Core.downloadFailed.add(new Core.DownloadInfo(imageUrl, id));
                 return false;
             }
-            else return download(title, id, imageUrl, path, false, overwrite, isExHentai);
+            else return download(title, id, imageUrl, path, false, isExHentai);
         }
     }
 }
