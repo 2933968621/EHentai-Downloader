@@ -45,11 +45,11 @@ public class UI implements ActionListener, ComponentListener {
         message_text.setBounds(0, 0, frame.getWidth() - 22, frame.getHeight() - 200);
         message_text.setEditable(false);
         message_text.setCaretPosition(message_text.getDocument().getLength());
-       // message_text.setAutoscrolls(true);
+        message_text.setAutoscrolls(true);
 
         scrollPane.setBounds(0, 0, frame.getWidth() - 22, frame.getHeight() - 200);
         scrollPane.getViewport().add(message_text);
-        //scrollPane.setAutoscrolls(true);
+        scrollPane.setAutoscrolls(true);
 
         url_text.setBounds(50, message_text.getHeight() + 5, frame.getWidth() - 75, 25);
         url_text.setFont(new Font("Serif", Font.PLAIN, 16));
@@ -92,15 +92,6 @@ public class UI implements ActionListener, ComponentListener {
         frame.setVisible(true);
         frame.validate();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        new Thread(this::thread).start();
-    }
-
-    public void thread()
-    {
-        JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
-        if (scrollBar != null) {
-            scrollBar.setValue(scrollBar.getMaximum());
-        }
     }
 
     @Override
