@@ -25,6 +25,7 @@ public class UI implements ActionListener, ComponentListener {
     private final JButton stop_button = new JButton("Stop");
 
     private final JLabel url_label = new JLabel("URL:");
+    
     public static final JProgressBar progressBar = new JProgressBar();
 
     private Thread curThread = null;
