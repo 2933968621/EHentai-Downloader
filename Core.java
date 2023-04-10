@@ -1,6 +1,8 @@
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Core {
     public static String[] galleryID = null;
@@ -57,6 +59,9 @@ public class Core {
         }
 
         String title = StringUtil.getSubString(websiteInfo, "</div></div></div><div id=\"gd2\"><h1 id=\"gn\">", "</h1>");
+        Pattern pattern = Pattern.compile("[\\s\\\\/:\\*\\?\\\"<>\\|]");
+        Matcher matcher = pattern.matcher(title);
+        title = matcher.replaceAll(" ").replaceAll("[\\s]+$", "");
         int imageCount = getMaxImageCount(websiteInfo);
         UI.progressBar.setMaximum(imageCount);
         int progressID = -1;
@@ -86,7 +91,7 @@ public class Core {
                         break;
 
                     String curID = String.format("%0" + (int) (Math.log10(imageCount) + 1) + "d", i);
-                    File saveFilePath = new File(path, curID + ".png");
+                    File saveFilePath = new File(new File(path, title), curID + ".png");
                     if (saveFilePath.exists())
                     {
                         if (overwrite)
@@ -148,7 +153,7 @@ public class Core {
                     break;
 
                 String curID = String.format("%0" + (int) (Math.log10(imageCount) + 1) + "d", i);
-                File saveFilePath = new File(path, curID + ".png");
+                File saveFilePath = new File(new File(path, title), curID + ".png");
                 if (saveFilePath.exists())
                 {
                     if (overwrite)
