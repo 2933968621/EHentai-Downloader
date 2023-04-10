@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.regex.Matcher;
@@ -15,7 +16,7 @@ public class WebUtil {
     {
         try
         {
-            HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+            HttpURLConnection connection = (HttpURLConnection) new URI(url).toURL().openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.54 Safari/537.36 Edg/95.0.1020.30");
             if (!ipb_member_id.isEmpty() && !ipb_pass_hash.isEmpty())
@@ -48,7 +49,7 @@ public class WebUtil {
             connection.disconnect();
             return response.toString();
         }
-        catch (IOException e)
+        catch (IOException | URISyntaxException e)
         {
             e.printStackTrace();
         }
@@ -58,6 +59,13 @@ public class WebUtil {
 
     public static boolean download(String title, String id, String imageUrl, File path, boolean retry, boolean overwrite, boolean isExHentai) {
         try {
+            if (WebUtil.get(imageUrl, isExHentai).toLowerCase().contains("downloading original files of older galleries during peak hours requires gp, and you do not have enough."))
+            {
+                System.out.println(UI.addConsoleMessage("Insufficient GP to download the original image!"));
+                UI.original_checkbox.setSelected(false);
+                return false;
+            }
+
             Pattern pattern = Pattern.compile("[\\s\\\\/:\\*\\?\\\"<>\\|]");
             Matcher matcher = pattern.matcher(title);
             title = matcher.replaceAll(" ").replaceAll("[\\s]+$", "");
@@ -91,7 +99,7 @@ public class WebUtil {
                 }
             }
 
-            HttpURLConnection connection = (HttpURLConnection) new URL(imageUrl).openConnection();
+            HttpURLConnection connection = (HttpURLConnection) new URI(imageUrl).toURL().openConnection();
 
             connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.54 Safari/537.36 Edg/95.0.1020.30");
             connection.setRequestProperty("Accept", "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8");
