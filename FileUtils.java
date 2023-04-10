@@ -93,8 +93,4 @@ public class FileUtils {
     {
         toZip(srcDir, outputPath, true);
     }
-
-    public static void main(String[] args) {
-       toZip("C:\\Backup", new File("C:\\Backup.ZIP"));
-    }
 }
