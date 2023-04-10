@@ -69,6 +69,9 @@ public class Core {
             //int pageCount = Math.round(imageCount);
             for (int p = 0; p < imageCount; p++)
             {
+                if (Thread.currentThread().isInterrupted())
+                    break;
+
                 String pageInfo = getPageInfo(p, isExHentai(url));
                 if (pageInfo.contains("Your IP address has been temporarily banned for excessive pageloads which indicates that you are using automated mirroring/harvesting software."))
                 {
@@ -79,7 +82,30 @@ public class Core {
                 int pageMinImageCount = getCurMinImageCount(pageInfo);
                 for (int i = pageMinImageCount; i <= pageMaxImageCount; i++)
                 {
+                    if (Thread.currentThread().isInterrupted())
+                        break;
+
                     String curID = String.format("%0" + (int) (Math.log10(imageCount) + 1) + "d", i);
+                    File saveFilePath = new File(path, curID + ".png");
+                    if (saveFilePath.exists())
+                    {
+                        if (overwrite)
+                        {
+                            if (saveFilePath.delete())
+                                System.out.println(UI.addConsoleMessage("ID: " + curID + " has exists!, Deleted!"));
+                            else
+                            {
+                                System.out.println(UI.addConsoleMessage("ID: " + curID + " has exists!"));
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            System.out.println(UI.addConsoleMessage("ID: " + curID + " has exists!"));
+                            continue;
+                        }
+                    }
+
                     if (i > pageMinImageCount)
                     {
                         String origID = String.format("%0" + (int) (Math.log10(imageCount) + 1) + "d", i - 1);
@@ -87,21 +113,20 @@ public class Core {
                         String imageID = StringUtil.getSubString(imageOrig, "<a href=\"" + hentaiPage, "\"><img alt=\"" + curID + "\"");
                         String imagePage = WebUtil.get(hentaiPage + imageID, isExHentai);
                         String imageLink = (original && imagePage.contains("Download original")) ? (hentaiFImg + StringUtil.getSubString(imagePage, "a href=\"" + hentaiFImg, "\">Download original ").replaceAll("amp;", "")) : StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
-                        if (!WebUtil.download(title, curID, imageLink, path, retryFailed, overwrite, isExHentai))
+                        if (!WebUtil.download(title, curID, imageLink, path, retryFailed, isExHentai))
                             System.err.println("ID: " + i + " No download!");
                     }
                     else
                     {
                         String imagePage = WebUtil.get(hentaiPage + StringUtil.getSubString(pageInfo, "<a href=\"" + hentaiPage, "\"><img alt=\"" + curID + "\""), isExHentai);
                         String imageLink = (original && imagePage.contains("Download original")) ? (hentaiFImg + StringUtil.getSubString(imagePage, "a href=\"" + hentaiFImg, "\">Download original ").replaceAll("amp;", "")) : StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
-                        if (!WebUtil.download(title, curID, imageLink, path, retryFailed, overwrite, isExHentai))
+                        if (!WebUtil.download(title, curID, imageLink, path, retryFailed, isExHentai))
                             System.err.println("ID: " + i + " No download!");
                     }
 
                     progressID = i;
                     UI.progressBar.setValue(i);
-                    if (Thread.currentThread().isInterrupted())
-                        break;
+
                     try {
                         Thread.sleep(100);
                     }
@@ -119,7 +144,30 @@ public class Core {
         {
             for (int i = 1; i <= imageCount; i++)
             {
+                if (Thread.currentThread().isInterrupted())
+                    break;
+
                 String curID = String.format("%0" + (int) (Math.log10(imageCount) + 1) + "d", i);
+                File saveFilePath = new File(path, curID + ".png");
+                if (saveFilePath.exists())
+                {
+                    if (overwrite)
+                    {
+                        if (saveFilePath.delete())
+                            System.out.println(UI.addConsoleMessage("ID: " + curID + " has exists!, Deleted!"));
+                        else
+                        {
+                            System.out.println(UI.addConsoleMessage("ID: " + curID + " has exists!"));
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        System.out.println(UI.addConsoleMessage("ID: " + curID + " has exists!"));
+                        continue;
+                    }
+                }
+
                 if (i > 1)
                 {
                     String origID = String.format("%0" + (int) (Math.log10(imageCount) + 1) + "d", i - 1);
@@ -127,20 +175,19 @@ public class Core {
                     String imageID = StringUtil.getSubString(imageOrig, "<a href=\"" + hentaiPage, "\"><img alt=\"" + curID + "\"");
                     String imagePage = WebUtil.get(hentaiPage + imageID, isExHentai);
                     String imageLink = (original && imagePage.contains("Download original")) ? (hentaiFImg + StringUtil.getSubString(imagePage, "a href=\"" + hentaiFImg, "\">Download original ").replaceAll("amp;", "")) : StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
-                    if (!WebUtil.download(title, String.valueOf(i), imageLink, path, retryFailed, overwrite, isExHentai))
+                    if (!WebUtil.download(title, String.valueOf(i), imageLink, path, retryFailed, isExHentai))
                         System.err.println("ID: " + i + " No download!");
                 }
                 else
                 {
                     String imagePage = WebUtil.get(hentaiPage + StringUtil.getSubString(websiteInfo, "<a href=\"" + hentaiPage, "\"><img alt=\"" + curID + "\""), isExHentai);
                     String imageLink = (original && imagePage.contains("Download original")) ? (hentaiFImg + StringUtil.getSubString(imagePage, "a href=\"" + hentaiFImg, "\">Download original ").replaceAll("amp;", "")) : StringUtil.getSubString(imagePage, "img id=\"img\" src=\"", "\" ");
-                    if (!WebUtil.download(title, String.valueOf(i), imageLink, path, retryFailed, overwrite, isExHentai))
+                    if (!WebUtil.download(title, String.valueOf(i), imageLink, path, retryFailed, isExHentai))
                         System.err.println("ID: " + i + " No download!");
                 }
 
                 UI.progressBar.setValue(i);
-                if (Thread.currentThread().isInterrupted())
-                    break;
+
                 try {
                     Thread.sleep(100);
                 }
@@ -152,15 +199,17 @@ public class Core {
         }
 
         if (!retryFailed)
-            checkFail(title, path, overwrite, isExHentai);
+            checkFail(title, path, isExHentai);
+
+        System.out.println(UI.addConsoleMessage("Download completed."));
     }
 
-    public static void checkFail(String title, File path, boolean overwrite, boolean isExHentai)
+    public static void checkFail(String title, File path, boolean isExHentai)
     {
         if (!downloadFailed.isEmpty())
         {
             System.out.println(UI.addConsoleMessage("Some pictures failed to download, retying..."));
-            downloadFailed.forEach(i -> WebUtil.download(title, i.getID(), i.getURL(), path, false, overwrite, isExHentai));
+            downloadFailed.forEach(i -> WebUtil.download(title, i.getID(), i.getURL(), path, false, isExHentai));
             System.out.println(UI.addConsoleMessage("Complete. If the download fails, please download by yourself."));
         }
     }
