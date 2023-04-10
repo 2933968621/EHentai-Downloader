@@ -117,6 +117,7 @@ public class UI implements ActionListener, ComponentListener {
                 this.curThread = new Thread(() -> {
                     download_button.setVisible(false);
                     stop_button.setEnabled(true);
+                    progressBar.setValue(0);
                     progressBar.setVisible(true);
                     Core.downloadImageSet(url_text.getText(), backupSavePath = fileChooser.getSelectedFile(), retry_checkbox.isSelected(), overwrite_checkbox.isSelected(), original_checkbox.isSelected());
                     download_button.setVisible(true);
