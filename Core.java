@@ -58,6 +58,7 @@ public class Core {
 
         String title = StringUtil.getSubString(websiteInfo, "</div></div></div><div id=\"gd2\"><h1 id=\"gn\">", "</h1>");
         int imageCount = getMaxImageCount(websiteInfo);
+        UI.progressBar.setMaximum(imageCount);
         int progressID = -1;
 
         String hentaiPage = isExHentai ? "https://exhentai.org/s/" : "https://e-hentai.org/s/";
@@ -65,6 +66,7 @@ public class Core {
 
         if (imageCount > numberOfPage)
         {
+            //int pageCount = Math.round(imageCount);
             for (int p = 0; p < imageCount; p++)
             {
                 String pageInfo = getPageInfo(p, isExHentai(url));
@@ -97,6 +99,9 @@ public class Core {
                     }
 
                     progressID = i;
+                    UI.progressBar.setValue(i);
+                    if (Thread.currentThread().isInterrupted())
+                        break;
                     try {
                         Thread.sleep(100);
                     }
@@ -133,6 +138,9 @@ public class Core {
                         System.err.println("ID: " + i + " No download!");
                 }
 
+                UI.progressBar.setValue(i);
+                if (Thread.currentThread().isInterrupted())
+                    break;
                 try {
                     Thread.sleep(100);
                 }
