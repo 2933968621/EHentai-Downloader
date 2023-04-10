@@ -18,13 +18,14 @@ public class UI implements ActionListener, ComponentListener {
 
     private final JCheckBox overwrite_checkbox = new JCheckBox("Overwrite existing", false);
 
-    private final JCheckBox original_checkbox = new JCheckBox("Original", false);
+    public static final JCheckBox original_checkbox = new JCheckBox("Original", false);
 
     private final JButton download_button = new JButton("Download");
 
     private final JButton stop_button = new JButton("Stop");
 
     private final JLabel url_label = new JLabel("URL:");
+    public static final JProgressBar progressBar = new JProgressBar();
 
     private Thread curThread = null;
 
@@ -44,10 +45,11 @@ public class UI implements ActionListener, ComponentListener {
         message_text.setBounds(0, 0, frame.getWidth() - 22, frame.getHeight() - 200);
         message_text.setEditable(false);
         message_text.setCaretPosition(message_text.getDocument().getLength());
-        message_text.setAutoscrolls(true);
+       // message_text.setAutoscrolls(true);
 
         scrollPane.setBounds(0, 0, frame.getWidth() - 22, frame.getHeight() - 200);
         scrollPane.getViewport().add(message_text);
+        //scrollPane.setAutoscrolls(true);
 
         url_text.setBounds(50, message_text.getHeight() + 5, frame.getWidth() - 75, 25);
         url_text.setFont(new Font("Serif", Font.PLAIN, 16));
@@ -64,9 +66,14 @@ public class UI implements ActionListener, ComponentListener {
         stop_button.addActionListener(this);
         stop_button.setBounds(3, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + 15, frame.getWidth() - 28, 25);
 
-        retry_checkbox.setBounds(3, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + stop_button.getHeight() + 20, 150, 25);
-        overwrite_checkbox.setBounds(150, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + stop_button.getHeight() + 20, 300, 25);
-        original_checkbox.setBounds(300, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + stop_button.getHeight() + 20, 450, 25);
+        progressBar.setVisible(false);
+        progressBar.setBounds(3, message_text.getHeight() + url_text.getHeight() + 10, frame.getWidth() - 28, 25);
+        progressBar.setStringPainted(true);
+        progressBar.setMinimum(0);
+
+        retry_checkbox.setBounds(3, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + stop_button.getHeight() + 20, 110, 25);
+        overwrite_checkbox.setBounds(120, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + stop_button.getHeight() + 20, 150, 25);
+        original_checkbox.setBounds(270, message_text.getHeight() + url_text.getHeight() + download_button.getHeight() + stop_button.getHeight() + 20, 150, 25);
 
         panel.add(scrollPane);
         panel.add(url_text);
@@ -76,6 +83,7 @@ public class UI implements ActionListener, ComponentListener {
         panel.add(overwrite_checkbox);
         panel.add(original_checkbox);
         panel.add(url_label);
+        panel.add(progressBar);
         panel.setLayout(null);
 
         frame.setLayout(null);
@@ -84,6 +92,15 @@ public class UI implements ActionListener, ComponentListener {
         frame.setVisible(true);
         frame.validate();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        new Thread(this::thread).start();
+    }
+
+    public void thread()
+    {
+        JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
+        if (scrollBar != null) {
+            scrollBar.setValue(scrollBar.getMaximum());
+        }
     }
 
     @Override
@@ -98,11 +115,13 @@ public class UI implements ActionListener, ComponentListener {
             if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
             {
                 this.curThread = new Thread(() -> {
-                    download_button.setEnabled(false);
+                    download_button.setVisible(false);
                     stop_button.setEnabled(true);
+                    progressBar.setVisible(true);
                     Core.downloadImageSet(url_text.getText(), backupSavePath = fileChooser.getSelectedFile(), retry_checkbox.isSelected(), overwrite_checkbox.isSelected(), original_checkbox.isSelected());
-                    download_button.setEnabled(true);
+                    download_button.setVisible(true);
                     stop_button.setEnabled(false);
+                    progressBar.setVisible(false);
                     this.curThread = null;
                 });
 
@@ -112,10 +131,11 @@ public class UI implements ActionListener, ComponentListener {
 
         if (e.getSource() == stop_button && this.curThread != null)
         {
-            this.curThread.stop();
+            this.curThread.interrupt();
             this.curThread = null;
-            download_button.setEnabled(true);
+            download_button.setVisible(true);
             stop_button.setEnabled(false);
+            progressBar.setVisible(false);
         }
     }
 
