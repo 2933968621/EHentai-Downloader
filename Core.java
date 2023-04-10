@@ -65,8 +65,7 @@ public class Core {
 
         if (imageCount > numberOfPage)
         {
-            int pageCount = Math.round(imageCount);
-            for (int p = 0; p < pageCount; p++)
+            for (int p = 0; p < imageCount; p++)
             {
                 String pageInfo = getPageInfo(p, isExHentai(url));
                 if (pageInfo.contains("Your IP address has been temporarily banned for excessive pageloads which indicates that you are using automated mirroring/harvesting software."))
@@ -165,17 +164,17 @@ public class Core {
 
     public static int getMaxImageCount(String websiteInfo)
     {
-        return Integer.parseInt(StringUtil.getSubString(websiteInfo, "Showing " + StringUtil.getSubString(websiteInfo, "Showing ", " of ").trim() + " of ", " images").trim());
+        return Integer.parseInt(StringUtil.getSubString(websiteInfo, "Showing " + StringUtil.getSubString(websiteInfo, "Showing ", " of ").trim() + " of ", " images").replaceAll(",", "").trim());
     }
 
     public static int getCurMaxImageCount(String websiteInfo)
     {
-        return Integer.parseInt(StringUtil.getSubString(StringUtil.getSubString(websiteInfo, "Showing ", " of ").trim(), " - ", "").trim());
+        return Integer.parseInt(StringUtil.getSubString(StringUtil.getSubString(websiteInfo, "Showing ", " of ").trim(), " - ", "").replaceAll(",", "").trim());
     }
 
     public static int getCurMinImageCount(String websiteInfo)
     {
-        return Integer.parseInt(StringUtil.getSubString(StringUtil.getSubString(websiteInfo, "Showing ", " of ").trim(), "", " - " + getCurMaxImageCount(websiteInfo)).trim());
+        return Integer.parseInt(StringUtil.getSubString(StringUtil.getSubString(websiteInfo, "Showing ", " of ").trim(), "", " - " + getCurMaxImageCount(websiteInfo)).replaceAll(",", "").trim());
     }
 
     public static String getPageInfo(int id, boolean isExHentai)
