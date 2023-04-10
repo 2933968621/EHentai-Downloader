@@ -10,7 +10,7 @@ public class UI implements ActionListener, ComponentListener {
 
     public static final JTextPane message_text = new JTextPane();
 
-    private final JScrollPane scrollPane = new JScrollPane();
+    private static final JScrollPane scrollPane = new JScrollPane();
 
     private final JTextField url_text = new JTextField(0);
 
@@ -45,11 +45,11 @@ public class UI implements ActionListener, ComponentListener {
         message_text.setBounds(0, 0, frame.getWidth() - 22, frame.getHeight() - 200);
         message_text.setEditable(false);
         message_text.setCaretPosition(message_text.getDocument().getLength());
-        message_text.setAutoscrolls(true);
+        //message_text.setAutoscrolls(true);
 
         scrollPane.setBounds(0, 0, frame.getWidth() - 22, frame.getHeight() - 200);
         scrollPane.getViewport().add(message_text);
-        scrollPane.setAutoscrolls(true);
+        //scrollPane.setAutoscrolls(true);
 
         url_text.setBounds(50, message_text.getHeight() + 5, frame.getWidth() - 75, 25);
         url_text.setFont(new Font("Serif", Font.PLAIN, 16));
@@ -153,7 +153,11 @@ public class UI implements ActionListener, ComponentListener {
 
     public static String addConsoleMessage(String message)
     {
+        int before = scrollPane.getVerticalScrollBar().getMaximum();
         message_text.setText(message_text.getText() + message + "\n");
+        int maximum = scrollPane.getVerticalScrollBar().getMaximum();
+        if (maximum >= before)
+            scrollPane.getVerticalScrollBar().setValue(maximum);
         return message;
     }
 }
