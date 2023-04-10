@@ -66,9 +66,9 @@ public class WebUtil {
                 return false;
             }
 
-            Pattern pattern = Pattern.compile("[\\s\\\\/:\\*\\?\\\"<>\\|]");
-            Matcher matcher = pattern.matcher(title);
-            title = matcher.replaceAll(" ").replaceAll("[\\s]+$", "");
+            //Pattern pattern = Pattern.compile("[\\s\\\\/:\\*\\?\\\"<>\\|]");
+            //Matcher matcher = pattern.matcher(title);
+            //title = matcher.replaceAll(" ").replaceAll("[\\s]+$", "");
 
             if (!path.exists())
                 if (!path.mkdir())
